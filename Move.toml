@@ -1,0 +1,10 @@
+[package]
+name = "Rlp"
+version = "0.0.1"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "61d920a2bccb431c89588e2db69991a3819eed3a" }
+MoveStdlib = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/deps/move-stdlib/", rev = "61d920a2bccb431c89588e2db69991a3819eed3a" }
+
+[addresses]
+rlp = "0x0"
