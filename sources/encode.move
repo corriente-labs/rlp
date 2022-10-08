@@ -5,7 +5,7 @@ module rlp::encode {
 
     const CONST_256_EXP_8: u128 = 18446744073709551616;
 
-    const ERR_TOO_MANY_ITEMS: u64 = 0;
+    const ERR_TOO_LONG_BYTE_ARRAY: u64 = 0;
 
     public fun encode_bytes(input: vector<u8>): vector<u8> {
         if (vector::length(&input) == 1 && *vector::borrow(&input, 0) < 0x80) {
@@ -22,7 +22,7 @@ module rlp::encode {
         if (len < 56) {
             return to_byte((len as u8) + offset)
         };
-        assert!((len as u128) < CONST_256_EXP_8, ERR_TOO_MANY_ITEMS);
+        assert!((len as u128) < CONST_256_EXP_8, ERR_TOO_LONG_BYTE_ARRAY);
         let bl = to_binary(len);
         let len_bl = vector::length(&bl);
         let left = to_byte((len_bl as u8) + offset + 55);
