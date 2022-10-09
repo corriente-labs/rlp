@@ -68,12 +68,14 @@ module rlp::encode {
 #[test_only]
 module rlp::encode_test {
     use std::vector;
+    use sui::crypto::{ecrecover, keccak256};
     use rlp::encode::{encode_bytes, encode_bytes_list};
 
     #[test]
-    public fun test_encode_tx() {
+    public fun test_encode_tx_and_sig_verify() {
         // https://etherscan.io/tx/0x645ffdce2201fc839c1b71d19897ac409408bd55f13118f084a79a56bacc88e3
         // https://toolkit.abdk.consulting/ethereum#transaction,rlp
+        // recover public key: https://toolkit.abdk.consulting/ethereum#recover-address
 
         let nonce = x"08";
         let gas_price = x"0189640290"; // 6600000144
@@ -98,6 +100,33 @@ module rlp::encode_test {
 
         let res = encode_bytes_list(list);
         assert!(x"f8a90885018964029082ea6094dac17f958d2ee523a2206206994597c13d831ec780b844a9059cbb0000000000000000000000008bab213e48bab5e124781f595b53b4bc360a1430000000000000000000000000000000000000000000000000000000000044aa2026a0796dc7f6cb1f80aa75e72ba5e7137bf32928c5701eb5a39a412c08f0138d2afda00c014f2b053190278ed2bf70c020c16c00b363fb90f6291288fec702367dcf38" == res, 0);
+
+        let chain_id = x"01";
+        let signed_tx = vector::empty();
+        vector::push_back(&mut signed_tx, nonce);
+        vector::push_back(&mut signed_tx, gas_price);
+        vector::push_back(&mut signed_tx, gas_limit);
+        vector::push_back(&mut signed_tx, to);
+        vector::push_back(&mut signed_tx, value);
+        vector::push_back(&mut signed_tx, data);
+        vector::push_back(&mut signed_tx, chain_id);
+        vector::push_back(&mut signed_tx, vector::empty());
+        vector::push_back(&mut signed_tx, vector::empty());
+        let tx = encode_bytes_list(signed_tx);
+
+        let signed_hash = keccak256(tx);
+        assert!(signed_hash == x"f8aeb4ec9bdc760ff842983d6bc8dad93c288ffc2473586ab6427dbcd63759dc", 0);
+
+        let sig = vector::empty();
+        vector::append(&mut sig, r);
+        vector::append(&mut sig, s);
+        let recid = x"01"; // 1 = 38 - 1 * 2 - 35 = v - chain_id * 2 - 35
+        vector::append(&mut sig, recid);
+
+        let pubkey = ecrecover(sig, signed_hash);
+
+        assert!(vector::length(&pubkey) == 33, 0);
+        assert!(pubkey == x"0357f87411f894308e8af8b0ea519889a9cc4f99ef17d6da1904690bc545214e9c", 0);
     }
 
     #[test]
