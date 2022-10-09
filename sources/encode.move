@@ -71,6 +71,36 @@ module rlp::encode_test {
     use rlp::encode::{encode_bytes, encode_bytes_list};
 
     #[test]
+    public fun test_encode_tx() {
+        // https://etherscan.io/tx/0x645ffdce2201fc839c1b71d19897ac409408bd55f13118f084a79a56bacc88e3
+        // https://toolkit.abdk.consulting/ethereum#transaction,rlp
+
+        let nonce = x"08";
+        let gas_price = x"0189640290"; // 6600000144
+        let gas_limit = x"ea60"; // 60000
+        let to = x"dac17f958d2ee523a2206206994597c13d831ec7";
+        let value = x"";
+        let data = x"a9059cbb0000000000000000000000008bab213e48bab5e124781f595b53b4bc360a1430000000000000000000000000000000000000000000000000000000000044aa20";
+        let v = x"26";
+        let r = x"796dc7f6cb1f80aa75e72ba5e7137bf32928c5701eb5a39a412c08f0138d2afd";
+        let s = x"0c014f2b053190278ed2bf70c020c16c00b363fb90f6291288fec702367dcf38";
+
+        let list = vector::empty();
+        vector::push_back(&mut list, nonce);
+        vector::push_back(&mut list, gas_price);
+        vector::push_back(&mut list, gas_limit);
+        vector::push_back(&mut list, to);
+        vector::push_back(&mut list, value);
+        vector::push_back(&mut list, data);
+        vector::push_back(&mut list, v);
+        vector::push_back(&mut list, r);
+        vector::push_back(&mut list, s);
+
+        let res = encode_bytes_list(list);
+        assert!(x"f8a90885018964029082ea6094dac17f958d2ee523a2206206994597c13d831ec780b844a9059cbb0000000000000000000000008bab213e48bab5e124781f595b53b4bc360a1430000000000000000000000000000000000000000000000000000000000044aa2026a0796dc7f6cb1f80aa75e72ba5e7137bf32928c5701eb5a39a412c08f0138d2afda00c014f2b053190278ed2bf70c020c16c00b363fb90f6291288fec702367dcf38" == res, 0);
+    }
+
+    #[test]
     public fun test_encode() {
         let res = encode_bytes(x"05");
         assert!(x"05" == res, 0);
