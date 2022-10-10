@@ -3,18 +3,53 @@ module rlp::decode {
     use std::vector;
 
     const ERR_EMPTY: u64 = 0;
-    const ERR_INVALID: u64 = 0;
+    const ERR_INVALID: u64 = 1;
+    const ERR_NOT_BYTES: u64 = 2;
+    const ERR_NOT_LIST: u64 = 3;
+    const ERR_NOT_BYTES_LIST: u64 = 4;
 
     const TYPE_BYTES: u8 = 0;
     const TYPE_LIST: u8 = 1;
 
-    public fun decode_bytes(rlp: vector<u8>): vector<u8> {
-        let _ = rlp;
-        return vector::empty()
+    public fun decode_bytes(rlp: &vector<u8>): vector<u8> {
+        let len = vector::length(rlp);
+        if (len == 0) {
+            return vector::empty()
+        };
+
+        let output: vector<u8> = vector::empty();
+        let (offset, size, type) = decode_length(rlp);
+        if (type == TYPE_BYTES) {
+            let i = 0;
+            while (i < size) {
+                let b = *vector::borrow(rlp, offset + i);
+                vector::push_back(&mut output, b);
+            };
+        } else {
+            assert!(false, ERR_NOT_BYTES);
+        };
+        output
     }
-    public fun decode_bytes_list(rlp: vector<u8>): vector<vector<u8>> {
-        let _ = rlp;
-        return vector::empty()
+
+    // TODO
+    public fun decode_bytes_list(rlp: &vector<u8>): vector<vector<u8>> {
+        let len = vector::length(rlp);
+        if (len == 0) {
+            return vector::empty()
+        };
+
+        let output: vector<vector<u8>> = vector::empty();
+        let (offset, size, type) = decode_length(rlp);
+        if (type == TYPE_BYTES) {
+            assert!(false, ERR_NOT_BYTES_LIST);
+        } else if (type == TYPE_LIST) {
+            let next = decode_bytes(&slice(rlp, offset, size));
+            vector::push_back(&mut output, next);
+        } else {
+            assert!(false, ERR_NOT_BYTES_LIST);
+        };
+
+        output
     }
 
     // return: (offset, len, type)
@@ -30,18 +65,20 @@ module rlp::decode {
 
         if (prefix <= 0x7f) {
             return (0, 1, TYPE_BYTES)
-        } else if (prefix <= 0xb7 && len > ((prefix - 0x80) as u64)) {
-            let len = prefix - 0x80;
-            return (1, (len as u64), TYPE_BYTES)
         };
         
-        let tmp = ((prefix - 0xb7) as u64);
+        let bytes_len = ((prefix - 0x80) as u64);
+        if (prefix <= 0xb7 && len > bytes_len) {
+            return (1, bytes_len, TYPE_BYTES)
+        };
+        
+        let len_len = ((prefix - 0xb7) as u64);
+        let bytes_len = to_integer(&slice(rlp, 1, len_len));
         if (prefix <= 0xb7
-            && len > tmp
-            && len > tmp + to_integer(&slice(rlp, 1, tmp))
+            && len > len_len
+            && len > len_len + bytes_len
         ) {
-            let bytes_len = to_integer(&slice(rlp, 1, tmp));
-            return (1 + tmp, bytes_len, TYPE_BYTES)
+            return (1 + len_len, bytes_len, TYPE_BYTES)
         };
 
         let tmp = ((prefix - 0xc0) as u64);
@@ -49,13 +86,13 @@ module rlp::decode {
             return (1, tmp, TYPE_LIST)
         };
 
-        let tmp = ((prefix - 0xf7) as u64);
+        let len_len = ((prefix - 0xf7) as u64);
+        let list_len = to_integer(&slice(rlp, 1, len_len));
         if (prefix <= 0xff
-            && len > tmp
-            && len > tmp + to_integer(&slice(rlp, 1, tmp))
+            && len > len_len
+            && len > len_len + list_len
         ) {
-            let list_len = to_integer(&slice(rlp, 1, tmp));
-            return (1 + tmp, list_len, TYPE_LIST)
+            return (1 + len_len, list_len, TYPE_LIST)
         };
 
         assert!(false, ERR_INVALID);
@@ -84,7 +121,7 @@ module rlp::decode {
         } else {
             let last = *vector::borrow(bytes, len - 1);
             let left = to_integer(&slice(bytes, 0, len - 1));
-            return (last as u64) + left * 256
+            return ((last as u64) + left) * 256
         }
     }
 }
