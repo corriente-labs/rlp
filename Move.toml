@@ -3,8 +3,8 @@ name = "Rlp"
 version = "0.0.1"
 
 [dependencies]
-Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "61d920a2bccb431c89588e2db69991a3819eed3a" }
-MoveStdlib = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/deps/move-stdlib/", rev = "61d920a2bccb431c89588e2db69991a3819eed3a" }
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework", rev = "df05544fb0cbd6d6db016e71e5facb5e7cc27988" }
+MoveStdlib = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/deps/move-stdlib/", rev = "df05544fb0cbd6d6db016e71e5facb5e7cc27988" }
 
 [addresses]
 rlp = "0x0"

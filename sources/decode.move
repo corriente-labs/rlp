@@ -81,7 +81,8 @@ module rlp::decode {
         };
         
         let len_len = ((prefix - 0xb7) as u64);
-        let bytes_len = to_integer(&slice(rlp, offset + 1, len_len));
+        // let bytes_len = to_integer(&slice(rlp, offset + 1, len_len));
+        let bytes_len = to_integer_within(rlp, offset + 1, len_len);
         if (prefix <= 0xb7
             && len > len_len
             && len > len_len + bytes_len
@@ -95,7 +96,8 @@ module rlp::decode {
         };
 
         let len_len = ((prefix - 0xf7) as u64);
-        let list_len = to_integer(&slice(rlp, offset + 1, len_len));
+        // let list_len = to_integer(&slice(rlp, offset + 1, len_len));
+        let list_len = to_integer_within(rlp, offset + 1, len_len);
         if (prefix <= 0xff
             && len > len_len
             && len > len_len + list_len
@@ -129,7 +131,21 @@ module rlp::decode {
         } else {
             let last = *vector::borrow(bytes, len - 1);
             let left = to_integer(&slice(bytes, 0, len - 1));
-            return ((last as u64) + left) * 256
+            return (last as u64) + left * 256
+        }
+    }
+
+    fun to_integer_within(bytes: &vector<u8>, offset: u64, size: u64): u64 {
+        if (size == 0) {
+            assert!(false, ERR_EMPTY);
+            return 0 // never evaluated
+        } else if (size == 1) {
+            let b = *vector::borrow(bytes, offset);
+            return (b as u64)
+        } else {
+            let last = *vector::borrow(bytes, offset + size - 1);
+            let left = to_integer_within(bytes, offset, size - 1);
+            return (last as u64) + left * 256
         }
     }
 }
