@@ -81,7 +81,6 @@ module rlp::decode {
         };
         
         let len_len = ((prefix - 0xb7) as u64);
-        // let bytes_len = to_integer(&slice(rlp, offset + 1, len_len));
         let bytes_len = to_integer_within(rlp, offset + 1, len_len);
         if (prefix <= 0xb7
             && len > len_len
@@ -96,7 +95,6 @@ module rlp::decode {
         };
 
         let len_len = ((prefix - 0xf7) as u64);
-        // let list_len = to_integer(&slice(rlp, offset + 1, len_len));
         let list_len = to_integer_within(rlp, offset + 1, len_len);
         if (prefix <= 0xff
             && len > len_len
